@@ -13,3 +13,5 @@ module "ec2_instance" {
     var_az = ["dummy_value"]          # Provide dummy values to satisfy module requirements
     var_idle_time_out = 60
     var_connection_draining_timeout = 300
+}
+##
