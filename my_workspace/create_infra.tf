@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 module "ec2_instance" {
-    source = "./modules"
+    source = "../modules"
     var_ami = "ami-07c8c1b18ca66bb07"
     instancetype = "t3.micro"
     create_iam_user = false  # Do not create IAM user
