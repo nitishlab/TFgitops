@@ -52,17 +52,17 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-      - name: Terraform apply for main (production)
+      - name: Terraform destroy for main (production)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        id: apply_main
-        run: terraform apply --auto-approve -input=false -parallelism=1 planfile
+        id: destroy_main
+        run: terraform destroy --auto-approve -input=false -parallelism=1 planfile
 
-      - name: Terraform apply for staging
+      - name: Terraform destroy for staging
         if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
-        id: apply_staging
-        run: terraform apply --auto-approve -input=false -parallelism=1 planfile
+        id: destroy_staging
+        run: terraform destroy --auto-approve -input=false -parallelism=1 planfile
 
-      - name: Terraform apply for pull request to main (production)
+      - name: Terraform destroy for pull request to main (production)
         if: github.event_name == 'pull_request' && github.base_ref == 'refs/heads/main'
         id: apply_pr_main
-        run: terraform apply --auto-approve -input=false -parallelism=1 planfile
+        run: terraform destroy --auto-approve -input=false -parallelism=1 planfile
