@@ -60,9 +60,9 @@ jobs:
       - name: Terraform destroy for staging
         if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
         id: destroy_staging
-        run: terraform destroy --auto-approve -input=false -parallelism=1 planfile
+        run: terraform destroy --auto-approve -input=false -parallelism=1 
 
       - name: Terraform destroy for pull request to main (production)
         if: github.event_name == 'pull_request' && github.base_ref == 'refs/heads/main'
         id: apply_pr_main
-        run: terraform destroy --auto-approve -input=false -parallelism=1 planfile
+        run: terraform destroy --auto-approve -input=false -parallelism=1 
