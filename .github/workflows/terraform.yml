@@ -16,7 +16,8 @@ on:
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  BUCKET_TF_STATE: ${{ secrets.BUCKET_TF_STATE }}
+  BUCKET_TF_STATE_STAGING: ${{ secrets.BUCKET_TF_STATE_STAGING }}
+  BUCKET_TF_STATE_PROD: ${{ secrets.BUCKET_TF_STATE_PROD }}
   AWS_REGION: eu-north-1
 
 jobs:
@@ -35,34 +36,51 @@ jobs:
       - name: Setup Terraform with specified version on runner
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform init
-        id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE }}" -backend-config="region=${{ env.AWS_REGION }}"
+      - name: Terraform init for staging
+        if: github.ref == 'refs/heads/staging'
+        id: init_staging
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}"
       
+      - name: Terraform init for main (production)
+        if: github.ref == 'refs/heads/main'
+        id: init_main
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}"
+
       - name: Terraform validate
         id: validate
         run: terraform validate
 
-      - name: Terraform plan
-        id: plan
-        run: terraform plan -out=planfile
+      - name: Terraform plan for staging
+        if: github.ref == 'refs/heads/staging'
+        id: plan_staging
+        run: terraform plan -out=staging_planfile
         continue-on-error: true
 
-      - name: Terraform plan status
-        if: steps.plan.outcome == 'failure'
+      - name: Terraform plan for main (production)
+        if: github.ref == 'refs/heads/main'
+        id: plan_main
+        run: terraform plan -out=main_planfile
+        continue-on-error: true
+
+      - name: Terraform plan status for staging
+        if: steps.plan_staging.outcome == 'failure'
         run: exit 1
 
-      - name: Terraform destroy for main (production)
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        id: destroy_main
-        run: terraform destroy --auto-approve -input=false -parallelism=1 planfile
+      - name: Terraform plan status for main (production)
+        if: steps.plan_main.outcome == 'failure'
+        run: exit 1
 
-      - name: Terraform destroy for staging
+      - name: Terraform apply for staging
         if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
-        id: destroy_staging
-        run: terraform destroy --auto-approve -input=false -parallelism=1 
+        id: apply_staging
+        run: terraform apply --auto-approve -input=false -parallelism=1 staging_planfile
 
-      - name: Terraform destroy for pull request to main (production)
+      - name: Terraform apply for main (production)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: apply_main
+        run: terraform apply --auto-approve -input=false -parallelism=1 main_planfile
+
+      - name: Terraform apply for pull request to main (production)
         if: github.event_name == 'pull_request' && github.base_ref == 'refs/heads/main'
         id: apply_pr_main
-        run: terraform destroy --auto-approve -input=false -parallelism=1 
+        run: terraform apply --auto-approve -input=false -parallelism=1 main_planfile
