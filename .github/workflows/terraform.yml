@@ -16,8 +16,6 @@ on:
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  BUCKET_TF_STATE_STAGING: ${{ secrets.BUCKET_TF_STATE_STAGING }}
-  BUCKET_TF_STATE_PROD: ${{ secrets.BUCKET_TF_STATE_PROD }}
   AWS_REGION: eu-north-1
 
 jobs:
@@ -39,12 +37,12 @@ jobs:
       - name: Terraform init for staging
         if: github.ref == 'refs/heads/staging'
         id: init_staging
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}"
-      
+        run: terraform init -backend-config=backend_config.tf
+
       - name: Terraform init for main (production)
         if: github.ref == 'refs/heads/main'
         id: init_main
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}"
+        run: terraform init -backend-config=backend_config_prod.tf
 
       - name: Terraform validate
         id: validate
