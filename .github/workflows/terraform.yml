@@ -39,7 +39,7 @@ jobs:
 
       - name: Terraform init
         id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}"
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"
       
       - name: Terraform validate
         id: validate
@@ -76,7 +76,7 @@ jobs:
 
       - name: Terraform init
         id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}"
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"
       
       - name: Terraform validate
         id: validate
