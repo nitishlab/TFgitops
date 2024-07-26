@@ -99,4 +99,4 @@ jobs:
       - name: Terraform apply for pull request to main (production)
         if: github.event_name == 'pull_request' && github.base_ref == 'refs/heads/main'
         id: apply_pr
-        run: terraform apply -auto-approve -input=false -parallelism=1 
+        run: terraform apply -auto-approve -input=false -parallelism=1 planfile
