@@ -37,7 +37,7 @@ jobs:
     name: "Apply terraform code changes for staging"
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: terraform-staging-${{ github.ref }}
       cancel-in-progress: true
     defaults:
       run:
@@ -82,7 +82,7 @@ jobs:
     name: "Apply terraform code changes for production"
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: terraform-prod-${{ github.ref }}
       cancel-in-progress: true
     defaults:
       run:
@@ -133,7 +133,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.inputs.environment == 'staging'
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: terraform-destroy-staging-${{ github.ref }}
       cancel-in-progress: true
     defaults:
       run:
@@ -165,7 +165,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.inputs.environment == 'production'
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: terraform-destroy-prod-${{ github.ref }}
       cancel-in-progress: true
     defaults:
       run:
