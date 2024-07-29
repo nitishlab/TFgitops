@@ -14,6 +14,17 @@ on:
     paths:
       - my_workspace/**
 
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy"
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -100,3 +111,52 @@ jobs:
         if: github.event_name == 'pull_request' && github.base_ref == 'refs/heads/main'
         id: apply_pr
         run: terraform apply -auto-approve -input=false -parallelism=1 planfile
+  
+  terraform-destroy-staging:
+    name: "Destroy staging environment"
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'staging'
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./my_workspace/staging
+
+    steps:
+     - name: Checkout the source code
+       uses: actions/checkout@v4
+
+      - name: Setup Terraform with specified version on runner
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        id: init
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"        
+      
+      - name: Terraform destroy
+        id: destroy
+        run: terraform destroy -auto-approve -input=false -parallelism=1
+
+
+  terraform-destroy-prod:
+    name: "Destroy production environment"
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production'
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./my_workspace/production
+     
+    steps:
+      - name: Checkout the source code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform with specified version on runner
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        id: init
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"
+
+      - name: Terraform destroy
+        id: destroy
+        run: terraform destroy -auto-approve -input=false -parallelism=1
