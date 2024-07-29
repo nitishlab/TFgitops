@@ -36,6 +36,9 @@ jobs:
   terraform-staging:
     name: "Apply terraform code changes for staging"
     runs-on: ubuntu-latest
+    concurrency:
+      group: terraform-staging-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         shell: bash
@@ -50,8 +53,13 @@ jobs:
 
       - name: Terraform init
         id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"
-      
+        run: |
+          for i in {1..3}; do
+            terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock" && break
+            echo "Retrying in 5 seconds..."
+            sleep 5
+          done
+
       - name: Terraform validate
         id: validate
         run: terraform validate
@@ -73,6 +81,9 @@ jobs:
   terraform-prod:
     name: "Apply terraform code changes for production"
     runs-on: ubuntu-latest
+    concurrency:
+      group: terraform-prod-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         shell: bash
@@ -87,8 +98,13 @@ jobs:
 
       - name: Terraform init
         id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"
-      
+        run: |
+          for i in {1..3}; do
+            terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock" && break
+            echo "Retrying in 5 seconds..."
+            sleep 5
+          done
+
       - name: Terraform validate
         id: validate
         run: terraform validate
@@ -116,6 +132,9 @@ jobs:
     name: "Destroy staging environment"
     runs-on: ubuntu-latest
     if: github.event.inputs.environment == 'staging'
+    concurrency:
+      group: terraform-destroy-staging-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         shell: bash
@@ -130,8 +149,13 @@ jobs:
 
       - name: Terraform init
         id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"        
-      
+        run: |
+          for i in {1..3}; do 
+            terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_STAGING }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock" && break       
+            echo "Retrying in 5 seconds..."
+            sleep 5
+          done
+
       - name: Terraform destroy
         id: destroy
         run: terraform destroy -auto-approve -input=false -parallelism=1
@@ -140,6 +164,9 @@ jobs:
     name: "Destroy production environment"
     runs-on: ubuntu-latest
     if: github.event.inputs.environment == 'production'
+    concurrency:
+      group: terraform-destroy-prod-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         shell: bash
@@ -154,7 +181,12 @@ jobs:
 
       - name: Terraform init
         id: init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock"
+        run: |
+          for i in {1..3}; do
+            terraform init -backend-config="bucket=${{ env.BUCKET_TF_STATE_PROD }}" -backend-config="region=${{ env.AWS_REGION }}" -backend-config="dynamodb_table=terraform-state-lock" && break
+            echo "Retrying in 5 seconds..."
+            sleep 5
+          done
 
       - name: Terraform destroy
         id: destroy
