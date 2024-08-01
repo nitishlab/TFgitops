@@ -177,10 +177,16 @@ jobs:
         id: remove_lock
         run: |
           LOCK_ID=$(jq -r '.Items[] | select(.ID.S == "terraform.tfstate") | .LockID.S' lock_ids.json)
-          echo "Removing LockID: $LOCK_ID"
-          aws dynamodb delete-item \
-            --table-name terraform-state-lock \
-            --key '{"LockID": {"S": "'$LOCK_ID'"}}'
+          
+          if [ -z "$LOCK_ID" ]; then
+            echo "No valid LockID found. Skipping deletion."
+            exit 0
+          else
+            echo "Removing LockID: $LOCK_ID"
+            aws dynamodb delete-item \
+              --table-name terraform-state-lock \
+              --key '{"LockID": {"S": "'$LOCK_ID'"}}'
+          fi
 
   terraform-destroy-prod:
     name: "Destroy production environment"
@@ -231,7 +237,13 @@ jobs:
         id: remove_lock
         run: |
           LOCK_ID=$(jq -r '.Items[] | select(.ID.S == "terraform.tfstate") | .LockID.S' lock_ids.json)
-          echo "Removing LockID: $LOCK_ID"
-          aws dynamodb delete-item \
-            --table-name terraform-state-lock \
-            --key '{"LockID": {"S": "'$LOCK_ID'"}}'
+          
+          if [ -z "$LOCK_ID" ]; then
+            echo "No valid LockID found. Skipping deletion."
+            exit 0
+          else
+            echo "Removing LockID: $LOCK_ID"
+            aws dynamodb delete-item \
+              --table-name terraform-state-lock \
+              --key '{"LockID": {"S": "'$LOCK_ID'"}}'
+          fi
