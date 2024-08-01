@@ -165,6 +165,23 @@ jobs:
             sleep 5
           done
 
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: List lock IDs from DynamoDB
+        id: list_locks
+        run: |
+          aws dynamodb scan --table-name terraform-state-lock --filter-expression "attribute_exists(LockID)" > lock_ids.json
+
+      - name: Remove state lock from DynamoDB
+        id: remove_lock
+        run: |
+          LOCK_ID=$(jq -r '.Items[] | select(.ID.S == "terraform.tfstate") | .LockID.S' lock_ids.json)
+          echo "Removing LockID: $LOCK_ID"
+          aws dynamodb delete-item \
+            --table-name terraform-state-lock \
+            --key '{"LockID": {"S": "'$LOCK_ID'"}}'
+
   terraform-destroy-prod:
     name: "Destroy production environment"
     runs-on: ubuntu-latest
@@ -201,3 +218,20 @@ jobs:
             echo "Retrying in 5 seconds..."
             sleep 5
           done
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: List lock IDs from DynamoDB
+        id: list_locks
+        run: |
+          aws dynamodb scan --table-name terraform-state-lock --filter-expression "attribute_exists(LockID)" > lock_ids.json
+
+      - name: Remove state lock from DynamoDB
+        id: remove_lock
+        run: |
+          LOCK_ID=$(jq -r '.Items[] | select(.ID.S == "terraform.tfstate") | .LockID.S' lock_ids.json)
+          echo "Removing LockID: $LOCK_ID"
+          aws dynamodb delete-item \
+            --table-name terraform-state-lock \
+            --key '{"LockID": {"S": "'$LOCK_ID'"}}'
