@@ -15,7 +15,7 @@ module "ec2_instance" {
   var_connection_draining_timeout = 300
 }
 
-
+##Prod instance
 ##
 ##
 ##
