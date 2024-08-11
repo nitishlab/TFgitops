@@ -13,6 +13,7 @@ module "ec2_instance" {
   var_az = ["dummy_value"]
   var_idle_time_out = 60
   var_connection_draining_timeout = 300
+  name = "staging-ec2"
 }
 
 ##
