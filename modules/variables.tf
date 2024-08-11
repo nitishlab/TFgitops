@@ -6,6 +6,11 @@ variable "instancetype" {
   default = "t3.micro"
 }
 
+variable "instance_name" {
+  type = string
+}
+
+
 variable "var_aws_iam_user" {
         type= string
 }

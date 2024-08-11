@@ -5,6 +5,9 @@ provider "aws" {
 resource "aws_instance" "myec2" {
    ami = var.var_ami
    instance_type = var.instancetype
+   tags = {
+    Name = var.instance_name
+   }
 }
 
 
